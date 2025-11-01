@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:15
+    container_name: campus_marketplace_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=campus_marketplace
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+    ports:
+      - "5432:5432"
+    networks:
+      - campus_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: campus_marketplace_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - campus_network
+
+  web:
+    build: .
+    container_name: campus_marketplace_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    networks:
+      - campus_network
+
+  celery:
+    build: .
+    container_name: campus_marketplace_celery
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    networks:
+      - campus_network
+
+volumes:
+  postgres_data:
+  media_volume:
+
+networks:
+  campus_network:
+    driver: bridge
