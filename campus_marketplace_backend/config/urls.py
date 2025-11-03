@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from rest_framework_simplejwt.views import TokenRefreshView
 
 # API Documentation
 schema_view = get_schema_view(
@@ -28,6 +29,9 @@ urlpatterns = [
     path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     
+    # JWT Authentication
+    path('api/v1/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
     # API endpoints
     path('api/v1/users/', include('apps.users.urls')),
     path('api/v1/marketplace/', include('apps.marketplace.urls')),
@@ -35,7 +39,6 @@ urlpatterns = [
     path('api/v1/transactions/', include('apps.transactions.urls')),
     path('api/v1/reviews/', include('apps.reviews.urls')),
     path('api/v1/safety/', include('apps.safety.urls')),
-    path('api/v1/admin/', include('apps.admin_panel.urls')),
 ]
 
 # Serve media files in development

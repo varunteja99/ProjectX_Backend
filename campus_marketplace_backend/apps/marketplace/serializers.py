@@ -1,13 +1,14 @@
 from rest_framework import serializers
 from .models import Campus, Category, Listing, ListingImage, Textbook, Wishlist, SavedSearch
-from apps.users.serializers import UserProfileSerializer
 
 
 class CampusSerializer(serializers.ModelSerializer):
+    """Campus serializer - single source of truth"""
     class Meta:
         model = Campus
         fields = ['id', 'name', 'email_domain', 'city', 'state', 'zip_code', 'is_active']
         read_only_fields = ['id']
+        ref_name = 'MarketplaceCampus'  # Explicit ref_name for Swagger
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -43,8 +44,9 @@ class TextbookSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
+# Import UserProfileSerializer locally to avoid circular import
 class ListingSerializer(serializers.ModelSerializer):
-    seller = UserProfileSerializer(read_only=True)
+    seller = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     campus = CampusSerializer(read_only=True)
     images = ListingImageSerializer(many=True, read_only=True)
@@ -63,6 +65,10 @@ class ListingSerializer(serializers.ModelSerializer):
             'expires_at', 'sold_at', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'seller', 'view_count', 'sold_at', 'created_at', 'updated_at']
+    
+    def get_seller(self, obj):
+        from apps.users.serializers import UserProfileSerializer
+        return UserProfileSerializer(obj.seller).data
     
     def create(self, validated_data):
         # Set seller from request user
@@ -110,7 +116,7 @@ class ListingCreateSerializer(serializers.ModelSerializer):
 
 class ListingListSerializer(serializers.ModelSerializer):
     """Simplified serializer for listing lists"""
-    seller = UserProfileSerializer(read_only=True)
+    seller = serializers.SerializerMethodField()
     primary_image = serializers.SerializerMethodField()
     
     class Meta:
@@ -119,6 +125,10 @@ class ListingListSerializer(serializers.ModelSerializer):
             'id', 'title', 'price', 'condition', 'status', 'location',
             'seller', 'primary_image', 'created_at'
         ]
+    
+    def get_seller(self, obj):
+        from apps.users.serializers import UserProfileSerializer
+        return UserProfileSerializer(obj.seller).data
     
     def get_primary_image(self, obj):
         image = obj.images.filter(is_primary=True).first() or obj.images.first()

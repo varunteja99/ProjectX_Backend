@@ -1,11 +1,10 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
-urlpatterns = [
-    # Review endpoints will go here
-]
+from .views import ReviewViewSet
 
 router = DefaultRouter()
-# router.register(r'reviews', views.ReviewViewSet)
+router.register(r'', ReviewViewSet, basename='review')
 
-urlpatterns += router.urls
+urlpatterns = [
+    path('', include(router.urls)),
+]

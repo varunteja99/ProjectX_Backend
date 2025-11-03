@@ -1,18 +1,12 @@
 from rest_framework import serializers
 from .models import User
+# Import CampusSerializer from marketplace
 from apps.marketplace.models import Campus
-
-
-class CampusSerializer(serializers.ModelSerializer):
-    """Simplified campus info for user serializer"""
-    class Meta:
-        model = Campus
-        fields = ['id', 'name', 'email_domain']
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Full user details"""
-    campus = CampusSerializer(read_only=True)
+    campus = serializers.SerializerMethodField()
     campus_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
     
     class Meta:
@@ -25,6 +19,13 @@ class UserSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'average_rating', 'total_reviews', 'created_at', 'updated_at']
+    
+    def get_campus(self, obj):
+        """Get campus info - import locally to avoid circular import"""
+        if obj.campus:
+            from apps.marketplace.serializers import CampusSerializer
+            return CampusSerializer(obj.campus).data
+        return None
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -36,7 +37,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'email', 'username', 'password', 'password_confirm',
-            'first_name', 'last_name', 'campus_id'
+            'first_name', 'last_name'
         ]
     
     def validate(self, data):
@@ -68,13 +69,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """User profile with limited info"""
-    campus = CampusSerializer(read_only=True)
+    campus_name = serializers.CharField(source='campus.name', read_only=True)
     
     class Meta:
         model = User
         fields = [
             'id', 'username', 'first_name', 'last_name',
-            'profile_picture_url', 'campus', 'average_rating',
+            'profile_picture_url', 'campus_name', 'average_rating',
             'total_reviews', 'created_at'
         ]
         read_only_fields = fields

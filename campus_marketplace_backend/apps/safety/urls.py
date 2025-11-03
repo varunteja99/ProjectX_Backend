@@ -1,13 +1,14 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
-urlpatterns = [
-    # Safety endpoints will go here
-]
+from .views import (
+    FlaggedContentViewSet, NotificationViewSet, StudyMaterialViewSet
+)
 
 router = DefaultRouter()
-# router.register(r'flagged-content', views.FlaggedContentViewSet)
-# router.register(r'disputes', views.DisputeViewSet)
-# router.register(r'notifications', views.NotificationViewSet)
+router.register(r'flagged-content', FlaggedContentViewSet, basename='flagged-content')
+router.register(r'notifications', NotificationViewSet, basename='notification')
+router.register(r'study-materials', StudyMaterialViewSet, basename='study-material')
 
-urlpatterns += router.urls
+urlpatterns = [
+    path('', include(router.urls)),
+]

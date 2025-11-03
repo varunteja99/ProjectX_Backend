@@ -1,12 +1,12 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
-urlpatterns = [
-    # Transaction endpoints will go here
-]
+from .views import OfferViewSet, TransactionViewSet, MeetingLocationViewSet
 
 router = DefaultRouter()
-# router.register(r'offers', views.OfferViewSet)
-# router.register(r'transactions', views.TransactionViewSet)
+router.register(r'offers', OfferViewSet, basename='offer')
+router.register(r'transactions', TransactionViewSet, basename='transaction')
+router.register(r'meeting-locations', MeetingLocationViewSet, basename='meeting-location')
 
-urlpatterns += router.urls
+urlpatterns = [
+    path('', include(router.urls)),
+]

@@ -1,12 +1,10 @@
 from rest_framework import serializers
 from .models import Conversation, Message
-from apps.users.serializers import UserProfileSerializer
-from apps.marketplace.serializers import ListingListSerializer
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender = UserProfileSerializer(read_only=True)
-    receiver = UserProfileSerializer(read_only=True)
+    sender = serializers.SerializerMethodField()
+    receiver = serializers.SerializerMethodField()
     
     class Meta:
         model = Message
@@ -15,6 +13,14 @@ class MessageSerializer(serializers.ModelSerializer):
             'is_read', 'created_at', 'read_at'
         ]
         read_only_fields = ['id', 'sender', 'receiver', 'is_read', 'created_at', 'read_at']
+    
+    def get_sender(self, obj):
+        from apps.users.serializers import UserProfileSerializer
+        return UserProfileSerializer(obj.sender).data
+    
+    def get_receiver(self, obj):
+        from apps.users.serializers import UserProfileSerializer
+        return UserProfileSerializer(obj.receiver).data
 
 
 class MessageCreateSerializer(serializers.ModelSerializer):
@@ -26,9 +32,9 @@ class MessageCreateSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    participant_1 = UserProfileSerializer(read_only=True)
-    participant_2 = UserProfileSerializer(read_only=True)
-    listing = ListingListSerializer(read_only=True)
+    participant_1 = serializers.SerializerMethodField()
+    participant_2 = serializers.SerializerMethodField()
+    listing = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
     
@@ -39,6 +45,20 @@ class ConversationSerializer(serializers.ModelSerializer):
             'last_message', 'unread_count', 'last_message_at', 'created_at'
         ]
         read_only_fields = fields
+    
+    def get_participant_1(self, obj):
+        from apps.users.serializers import UserProfileSerializer
+        return UserProfileSerializer(obj.participant_1).data
+    
+    def get_participant_2(self, obj):
+        from apps.users.serializers import UserProfileSerializer
+        return UserProfileSerializer(obj.participant_2).data
+    
+    def get_listing(self, obj):
+        if obj.listing:
+            from apps.marketplace.serializers import ListingListSerializer
+            return ListingListSerializer(obj.listing).data
+        return None
     
     def get_last_message(self, obj):
         last_msg = obj.messages.order_by('-created_at').first()
