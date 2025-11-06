@@ -5,7 +5,7 @@ from .views import (
     WishlistViewSet, SavedSearchViewSet
 )
 
-router = DefaultRouter()
+router = DefaultRouter(trailing_slash=False)
 router.register(r'campuses', CampusViewSet, basename='campus')
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'listings', ListingViewSet, basename='listing')

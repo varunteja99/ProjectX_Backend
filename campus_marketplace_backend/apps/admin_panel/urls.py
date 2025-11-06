@@ -5,7 +5,7 @@ urlpatterns = [
     # Admin panel endpoints will go here
 ]
 
-router = DefaultRouter()
+router = DefaultRouter(trailing_slash=False)
 # router.register(r'activity-logs', views.ActivityLogViewSet)
 # router.register(r'system-settings', views.SystemSettingViewSet)
 

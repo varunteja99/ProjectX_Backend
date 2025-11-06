@@ -85,22 +85,25 @@ class ListingCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating listings"""
     images = ListingImageSerializer(many=True, required=False)
     textbook = TextbookSerializer(required=False)
-    
+    category_id = serializers.UUIDField(write_only=True)
+    campus_id = serializers.UUIDField(write_only=True, required=False)
+
     class Meta:
         model = Listing
         fields = [
-            'category_id', 'title', 'description', 'price', 'condition',
+            'category_id', 'campus_id', 'title', 'description', 'price', 'condition',
             'location', 'is_negotiable', 'images', 'textbook'
         ]
     
     def create(self, validated_data):
         images_data = validated_data.pop('images', [])
         textbook_data = validated_data.pop('textbook', None)
-        
-        # Set seller and campus
+
+        # Set seller and campus_id (if not provided)
         validated_data['seller'] = self.context['request'].user
-        validated_data['campus'] = self.context['request'].user.campus
-        
+        if 'campus_id' not in validated_data:
+            validated_data['campus_id'] = self.context['request'].user.campus_id
+
         listing = Listing.objects.create(**validated_data)
         
         # Create images

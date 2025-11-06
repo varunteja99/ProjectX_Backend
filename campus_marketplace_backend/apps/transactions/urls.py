@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import OfferViewSet, TransactionViewSet, MeetingLocationViewSet
 
-router = DefaultRouter()
+router = DefaultRouter(trailing_slash=False)
 router.register(r'offers', OfferViewSet, basename='offer')
 router.register(r'transactions', TransactionViewSet, basename='transaction')
 router.register(r'meeting-locations', MeetingLocationViewSet, basename='meeting-location')

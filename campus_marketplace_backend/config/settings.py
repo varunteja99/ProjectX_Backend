@@ -192,6 +192,9 @@ CELERY_TIMEZONE = TIME_ZONE
 MAX_UPLOAD_SIZE = int(os.getenv('MAX_UPLOAD_SIZE', 5242880))  # 5MB
 LISTING_EXPIRY_DAYS = int(os.getenv('LISTING_EXPIRY_DAYS', 90))
 
+# URL Settings
+APPEND_SLASH = False
+
 # Security Settings for Production
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
