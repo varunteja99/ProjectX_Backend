@@ -66,8 +66,19 @@ class ListingViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def my_listings(self, request):
-        """Get current user's listings"""
-        listings = self.queryset.filter(seller=request.user)
+        """Get current user's listings (all statuses)"""
+        # Don't use self.queryset because it filters to status='active' only
+        # We want to show all listings (active, sold, expired, etc.) for the user
+        listings = Listing.objects.filter(seller=request.user).select_related(
+            'seller', 'category', 'campus'
+        ).prefetch_related('images').order_by('-created_at')
+
+        # Apply pagination
+        page = self.paginate_queryset(listings)
+        if page is not None:
+            serializer = ListingListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = ListingListSerializer(listings, many=True)
         return Response(serializer.data)
     

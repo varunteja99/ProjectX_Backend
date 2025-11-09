@@ -64,12 +64,12 @@ class UserViewSet(viewsets.ModelViewSet):
         
         if user:
             refresh = RefreshToken.for_user(user)
-            
+
             return Response({
                 'user': UserSerializer(user).data,
                 'tokens': {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
+                    'refresh_token': str(refresh),
+                    'access_token': str(refresh.access_token),
                 }
             })
         

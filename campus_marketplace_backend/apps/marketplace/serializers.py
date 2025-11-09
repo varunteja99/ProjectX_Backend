@@ -49,13 +49,13 @@ class ListingSerializer(serializers.ModelSerializer):
     seller = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     campus = CampusSerializer(read_only=True)
-    images = ListingImageSerializer(many=True, read_only=True)
+    images = ListingImageSerializer(many=True, required=False)
     textbook = TextbookSerializer(read_only=True)
-    
+
     # Write-only fields for creating/updating
-    category_id = serializers.UUIDField(write_only=True)
+    category_id = serializers.UUIDField(write_only=True, required=False)
     campus_id = serializers.UUIDField(write_only=True, required=False)
-    
+
     class Meta:
         model = Listing
         fields = [
@@ -65,20 +65,39 @@ class ListingSerializer(serializers.ModelSerializer):
             'expires_at', 'sold_at', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'seller', 'view_count', 'sold_at', 'created_at', 'updated_at']
-    
+
     def get_seller(self, obj):
         from apps.users.serializers import UserProfileSerializer
         return UserProfileSerializer(obj.seller).data
-    
+
     def create(self, validated_data):
         # Set seller from request user
         validated_data['seller'] = self.context['request'].user
-        
+
         # Set campus to user's campus if not provided
         if 'campus_id' not in validated_data:
             validated_data['campus_id'] = self.context['request'].user.campus_id
-        
+
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        images_data = validated_data.pop('images', None)
+
+        # Update listing fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update images if provided
+        if images_data is not None:
+            # Delete existing images
+            instance.images.all().delete()
+
+            # Create new images
+            for image_data in images_data:
+                ListingImage.objects.create(listing=instance, **image_data)
+
+        return instance
 
 
 class ListingCreateSerializer(serializers.ModelSerializer):
@@ -121,18 +140,19 @@ class ListingListSerializer(serializers.ModelSerializer):
     """Simplified serializer for listing lists"""
     seller = serializers.SerializerMethodField()
     primary_image = serializers.SerializerMethodField()
-    
+    images = ListingImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Listing
         fields = [
             'id', 'title', 'price', 'condition', 'status', 'location',
-            'seller', 'primary_image', 'created_at'
+            'seller', 'primary_image', 'images', 'created_at'
         ]
-    
+
     def get_seller(self, obj):
         from apps.users.serializers import UserProfileSerializer
         return UserProfileSerializer(obj.seller).data
-    
+
     def get_primary_image(self, obj):
         image = obj.images.filter(is_primary=True).first() or obj.images.first()
         if image:
