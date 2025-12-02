@@ -29,6 +29,11 @@ python-dateutil==2.9.0.post0
 celery==5.5.3
 redis==7.0.1
 
+# Real-time Messaging
+channels==4.0.0
+daphne==4.0.0
+channels-redis==4.1.0
+
 # Email
 django-anymail==13.1
 
